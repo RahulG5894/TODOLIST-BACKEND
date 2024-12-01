@@ -1,5 +1,6 @@
 package com.learning.todo_list.controller;
 
+import com.learning.todo_list.kafka.JsonKafkaProducer;
 import com.learning.todo_list.kafka.KafkaProducer;
 import com.learning.todo_list.model.Task;
 import com.learning.todo_list.model.TaskForm;
@@ -18,9 +19,12 @@ public class ToDoController {
     private final ToDoService toDoService;
     private final KafkaProducer kafkaProducer;
 
-    public ToDoController(ToDoService toDoService, KafkaProducer kafkaProducer) {
+    private final JsonKafkaProducer jsonKafkaProducer;
+
+    public ToDoController(ToDoService toDoService, KafkaProducer kafkaProducer, JsonKafkaProducer jsonKafkaProducer) {
         this.toDoService = toDoService;
         this.kafkaProducer = kafkaProducer;
+        this.jsonKafkaProducer = jsonKafkaProducer;
     }
 
     @GetMapping("/task-list")
@@ -32,6 +36,7 @@ public class ToDoController {
     public ResponseEntity<String> createTask(HttpServletRequest httpReq, @RequestBody TaskForm task) {
         Task t = toDoService.createTask(task);
         kafkaProducer.sendMessage("Task Details: " + t.toString());
+        jsonKafkaProducer.sendMessage(t);
         return new ResponseEntity<>("Task created successfully!!!", HttpStatus.CREATED);
     }
 
